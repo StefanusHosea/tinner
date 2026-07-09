@@ -132,7 +132,7 @@
             transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), 
                         opacity 0.5s ease, 
                         background-color 0.4s ease,
-                        visibility 0s linear 0.5s; /* Delay visibility hidden until transform finishes */
+                        visibility 0s linear 0.5s; 
         }
 
         .message-banner.show {
@@ -142,7 +142,7 @@
             transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), 
                         opacity 0.5s ease, 
                         background-color 0.4s ease,
-                        visibility 0s linear 0s; /* Visible immediately */
+                        visibility 0s linear 0s; 
         }
 
         .message-content {
@@ -299,6 +299,11 @@
             gap: 15px;
         }
 
+        /* Control Panel Wrappers for Flex Layout */
+        .sub-group { display: flex; gap: 10px; align-items: center; }
+        .preset-controls { display: flex; gap: 10px; align-items: center; }
+        .message-input-wrapper { display: flex; flex: 1; gap: 15px; width: 100%; align-items: center; }
+
         .labels-wrapper {
             position: relative;
             height: 15px;
@@ -397,8 +402,8 @@
         .btn-icon:hover, .btn-action:hover { background: var(--ui-element-bg-hover); }
         .btn-icon:active, .btn-action:active { transform: translateY(1px); }
 
-        .btn-icon { width: 36px; font-size: 16px; }
-        .btn-action { padding: 0 20px; letter-spacing: 1px; }
+        .btn-icon { width: 36px; font-size: 16px; flex-shrink: 0; }
+        .btn-action { padding: 0 20px; letter-spacing: 1px; flex-shrink: 0; }
         
         .btn-action.active, .btn-icon.active { background: #333; color: white; }
 
@@ -423,6 +428,9 @@
             margin-right: 10px;
             white-space: nowrap;
         }
+        
+        /* Mobile short labels hidden by default on desktop */
+        .lbl-short { display: none; }
 
         input[type="number"]{
             border-radius: 99px;
@@ -504,6 +512,7 @@
             padding: 24px;
             border-radius: 16px;
             width: 300px;
+            max-width: 90%;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             transform: scale(0.95) translateY(10px);
             transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -537,6 +546,75 @@
         }
         .modal-close:hover { background: #000; }
 
+        /* --- MOBILE RESPONSIVENESS --- */
+        @media (max-width: 850px) {
+            .control-panel {
+                padding: 30px 20px 25px;
+                gap: 20px;
+            }
+            .control-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+            }
+            .mode-controls-wrapper {
+                width: 100%;
+                height: auto; 
+            }
+            .mode-control-group {
+                flex-wrap: wrap;
+                gap: 15px;
+                width: 100%;
+            }
+            .sub-group { flex-wrap: wrap; gap: 8px; }
+            .preset-controls {
+                width: 100%;
+                flex-wrap: wrap;
+                justify-content: flex-start;
+                gap: 8px;
+            }
+            .message-input-wrapper {
+                width: 100%;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .fade-group { max-width: 100%; flex-wrap: wrap; }
+            
+            /* Hide elements not needed on small screens */
+            .hide-mobile { display: none !important; }
+            .vertical-divider { display: none; }
+            
+            /* Responsive labels / abbreviation trick */
+            .lbl-full { display: none; }
+            .lbl-short { 
+                display: inline; 
+                font-weight: 700; 
+                margin-left: -2px; 
+                text-transform: uppercase; 
+                opacity: 0.5;
+            }
+
+            .input-group { padding: 5px 10px; }
+            
+            /* Compact buttons */
+            .btn-icon { width: 34px; height: 34px; font-size: 14px; }
+            .btn-action { height: 34px; padding: 0 15px; font-size: 11px; }
+
+            .footer-note {
+                position: relative;
+                bottom: auto;
+                right: auto;
+                text-align: left;
+                margin-top: 5px;
+                width: 100%;
+            }
+            
+            /* Top bar mobile adjustments */
+            .top-bar { top: 15px; }
+            .mode-btn { padding: 6px 16px; font-size: 11px; letter-spacing: 2px; }
+            .present-btn { right: 15px; width: 36px; height: 36px; }
+        }
+
         /* --- LIVE MODE OVERRIDES --- */
         body.is-live .top-bar,
         body.is-live .control-panel {
@@ -557,7 +635,6 @@
         
         <div id="messageBanner" class="message-banner">
             <div class="marquee-wrapper">
-                <!-- Inner span wraps text directly to guarantee perfect width reading -->
                 <div id="messageContent" class="message-content"><span id="messageInner"></span></div>
             </div>
         </div>
@@ -581,29 +658,29 @@
             <div class="drawer-pill"></div>
         </div>
 
-        <!-- Seamless Labels Swapper -->
         <div class="labels-wrapper">
             <div class="section-label active" id="labelCountdown">COUNTDOWN SETTINGS</div>
             <div class="section-label" id="labelClock">CLOCK SETTINGS</div>
         </div>
 
-        <!-- Mode Specific Tools Row -->
         <div class="control-row">
             
             <div class="mode-controls-wrapper">
                 
-                <!-- COUNTDOWN CONTROLS (Group 1) -->
+                <!-- COUNTDOWN CONTROLS -->
                 <div class="mode-control-group active" id="groupCountdown">
-                    <button class="btn-icon active" id="btnToggleMsCountdown" title="Toggle Milliseconds">⏲️</button>
-                    <button class="btn-icon" id="btnTimeMode" title="Toggle Mode (Duration/Target Time)">⏳</button>
+                    <div class="sub-group">
+                        <button class="btn-icon active" id="btnToggleMsCountdown" title="Toggle Milliseconds">⏲️</button>
+                        <button class="btn-icon" id="btnTimeMode" title="Toggle Mode (Duration/Target Time)">⏳</button>
+                    </div>
                     
                     <div class="fade-group" id="inputDuration">
                         <input type="number" id="inHours" value="00" min="0" max="99">
-                        <span class="input-label">Hours</span>
+                        <span class="input-label"><span class="lbl-full">Hours</span><span class="lbl-short">h</span></span>
                         <input type="number" id="inMinutes" value="05" min="0" max="59">
-                        <span class="input-label">Minutes</span>
+                        <span class="input-label"><span class="lbl-full">Minutes</span><span class="lbl-short">m</span></span>
                         <input type="number" id="inSeconds" value="00" min="0" max="59">
-                        <span class="input-label">Seconds</span>
+                        <span class="input-label"><span class="lbl-full">Seconds</span><span class="lbl-short">s</span></span>
                     </div>
 
                     <div class="fade-group hidden" id="inputTarget">
@@ -611,14 +688,18 @@
                         <span class="input-label">Target Time</span>
                     </div>
 
-                    <button class="btn-action" id="btnStart">START</button>
-                    <button class="btn-action" id="btnPause">PAUSE</button>
-                    <button class="btn-action" id="btnReset">RESET</button>
+                    <div class="sub-group">
+                        <button class="btn-action" id="btnStart">START</button>
+                        <button class="btn-action" id="btnPause">PAUSE</button>
+                        <button class="btn-action" id="btnReset">RESET</button>
+                    </div>
                 </div>
 
-                <!-- CLOCK CONTROLS (Group 2) -->
+                <!-- CLOCK CONTROLS -->
                 <div class="mode-control-group" id="groupClock">
-                    <button class="btn-icon active" id="btnToggleMs" title="Toggle Milliseconds">⏲️</button>
+                    <div class="sub-group">
+                        <button class="btn-icon active" id="btnToggleMs" title="Toggle Milliseconds">⏲️</button>
+                    </div>
                     
                     <div class="fade-group">
                         <select id="timezoneSelect" class="timezone-select">
@@ -629,29 +710,34 @@
 
             </div>
 
-            <!-- Global Style Controls (Persistent Right Side) -->
-            <button class="btn-icon" id="btnPresetDark" title="Preset: Dark">⚫️</button>
-            <button class="btn-icon" id="btnPresetYellow" title="Preset: Yellow">🟡</button>
-            <button class="btn-icon" id="btnPresetWhite" title="Preset: Light">⚪️</button>
-            <button class="btn-icon" id="btnTransparent" title="Transparent Background">💠</button>
-            <button class="btn-icon" id="btnBgColor" title="Background Color">🌈</button>
-            <button class="btn-icon" id="btnTimerFont" title="Timer Font & Color">🅰️</button>
+            <!-- Global Style Controls -->
+            <div class="preset-controls">
+                <button class="btn-icon" id="btnPresetDark" title="Preset: Dark">⚫️</button>
+                <button class="btn-icon" id="btnPresetYellow" title="Preset: Yellow">🟡</button>
+                <button class="btn-icon" id="btnPresetWhite" title="Preset: Light">⚪️</button>
+                <button class="btn-icon" id="btnTransparent" title="Transparent Background">💠</button>
+                <button class="btn-icon" id="btnBgColor" title="Background Color">🌈</button>
+                <button class="btn-icon" id="btnTimerFont" title="Timer Font & Color">🅰️</button>
+            </div>
         </div>
 
         <div class="section-label active" style="position: relative; margin-top: 5px; transform: none; opacity: 1;">MESSAGE BANNER</div>
         <div class="control-row">
-            <input type="text" id="inMessage" class="message-input" placeholder="Message Text Input with **Markdown Formatting**">
+            <div class="message-input-wrapper">
+                <input type="text" id="inMessage" class="message-input" placeholder="Message Text Input with **Markdown Formatting**">
+                <button class="btn-action" id="btnShowMessage">SHOW</button>
+            </div>
             
-            <button class="btn-action" id="btnShowMessage">SHOW</button>
+            <div class="vertical-divider hide-mobile"></div>
             
-            <div class="vertical-divider"></div>
-            
-            <button class="btn-icon" id="btnBannerPresetRed" title="Preset: Red">🔴</button>
-            <button class="btn-icon" id="btnBannerPresetYellow" title="Preset: Yellow">🟡</button>
-            <button class="btn-icon" id="btnBannerPresetWhite" title="Preset: Light">⚪️</button>
-            <button class="btn-icon" id="btnBannerPresetDark" title="Preset: Dark">⚫️</button>
-            <button class="btn-icon" id="btnBannerBg" title="Banner Background">🌈</button>
-            <button class="btn-icon" id="btnBannerFont" title="Banner Font & Color">🅰️</button>
+            <div class="preset-controls">
+                <button class="btn-icon" id="btnBannerPresetRed" title="Preset: Red">🔴</button>
+                <button class="btn-icon" id="btnBannerPresetYellow" title="Preset: Yellow">🟡</button>
+                <button class="btn-icon" id="btnBannerPresetWhite" title="Preset: Light">⚪️</button>
+                <button class="btn-icon" id="btnBannerPresetDark" title="Preset: Dark">⚫️</button>
+                <button class="btn-icon" id="btnBannerBg" title="Banner Background">🌈</button>
+                <button class="btn-icon" id="btnBannerFont" title="Banner Font & Color">🅰️</button>
+            </div>
         </div>
 
         <div class="footer-note">Codecrafted by <a href="https://stefanus.hosea.id">Stefanus Hosea</a> • v2026.07.09.002</div>
