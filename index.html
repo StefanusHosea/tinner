@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<!---
+   
+   Tinner • Tailor-made countdown/clock display for live event purposes.
+   Initial: v09.07.2026
+   Codecrafted by hello@stefanushosea.com
+
+--->
+<html dev="stefanus@hosea.id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tinner</title>
+    <meta property="og:title" content="Tinner"/>
+    <meta name='description' content="Tailor-made countdown/clock display for live event purposes.">
+    <meta property="og:description" content="Tailor-made countdown/clock display for live event purposes.">
+    <meta property="og:type" content="website"/>
+    <meta property="og:url" content="https://tinner.hosea.id"/>
+    <meta property="og:image" content="https://tinner.hosea.id/shareable.jpg"/>
+    <meta property="og:image:type" content="image/jpeg"/>
+    <meta property="og:image:width" content="1200"/>
+    <meta property="og:image:height" content="630"/>
+    <meta name="author" content="Stefanus Hosea"/>
+    <meta name="keywords" content="timer, clock, countdown, counter, alarm"/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:site_name" content="Tinner"/>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Tinner">
+    <meta name="application-name" content="Tinner">
+    <link rel="apple-touch-icon" href="https://tinner.hosea.id/apple-touch-icon.png"/>
+    <meta name="theme-color" content="#242424"/>
+    <meta name="msapplication-navbutton-color" content="#242424"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="#242424"/>
+    <link rel="icon" href="/favicon.png" type="image/x-icon" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Host+Grotesk:ital,wght@0,300..800;1,300..800" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Default Theme Variables */
+            --bg-color: #000000;
+            --timer-font: 'Host Grotesk', sans-serif;
+            --timer-font-size: 15vw;
+            --timer-color: #ffffff;
+            --banner-bg: #ff0000;
+            --banner-font: 'Host Grotesk', sans-serif;
+            --banner-color: #ffffff;
+            
+            /* UI Colors */
+            --ui-bg: #ccc;
+            --ui-text: #242424;
+            --ui-element-bg: #ddd;
+            --ui-element-bg-hover: #eee;
+            --ui-border: #a0a0a0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Host Grotesk', sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            background-color: var(--bg-color);
+        }
+        
+        button{
+            font-family: 'Host Grotesk', sans-serif;
+        }
+
+        a{
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* --- DISPLAY AREA --- */
+        .display-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background-color: var(--bg-color);
+            transition: background-color 0.4s ease;
+        }
+
+        /* Transparent indication */
+        .display-container.is-transparent {
+            background-color: transparent !important;
+        }
+
+        .timer-text {
+            font-size: clamp(40px, var(--timer-font-size), 400px);
+            font-family: var(--timer-font);
+            color: var(--timer-color);
+            font-weight: 500;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+            letter-spacing: -0.02em;
+            z-index: 10;
+            transition: color 0.4s ease;
+        }
+
+        /* Message Banner */
+        .message-banner {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--banner-bg);
+            padding: 2vh 0;
+            display: flex; 
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            overflow: hidden;
+            
+            /* Seamless Transition Logic */
+            transform: translateY(100%);
+            opacity: 0;
+            visibility: hidden;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), 
+                        opacity 0.5s ease, 
+                        background-color 0.4s ease,
+                        visibility 0s linear 0.5s; /* Delay visibility hidden until transform finishes */
+        }
+
+        .message-banner.show {
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), 
+                        opacity 0.5s ease, 
+                        background-color 0.4s ease,
+                        visibility 0s linear 0s; /* Visible immediately */
+        }
+
+        .message-content {
+            font-family: var(--banner-font);
+            color: var(--banner-color);
+            font-size: clamp(24px, 4vw, 60px);
+            white-space: nowrap;
+            text-align: center;
+            transition: color 0.4s ease;
+        }
+
+        .message-content strong { font-weight: 700; }
+        .message-content em { font-style: italic; }
+
+        /* Marquee Animation */
+        .marquee-wrapper {
+            width: 100%;
+            overflow: hidden;
+        }
+
+        #messageInner {
+            display: inline-block;
+            white-space: nowrap;
+        }
+        
+        .is-marquee .message-content {
+            display: inline-block;
+            padding-left: 100%;
+            animation: marquee linear infinite;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* --- TOP BAR (Controller Only) --- */
+        .top-bar {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+            pointer-events: none; 
+            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .mode-toggle {
+            display: flex;
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(4px);
+            border-radius: 30px;
+            padding: 5px;
+            pointer-events: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2),
+            inset 0 0 25px #fff;
+        }
+
+        .mode-btn {
+            padding: 8px 24px;
+            border-radius: 25px;
+            border: none;
+            background: transparent;
+            font-family: 'Host Grotesk', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 5px;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn.active {
+            background: #f0f0f0;
+            color: #000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .present-btn {
+            position: absolute;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            pointer-events: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .present-btn:hover { transform: scale(1.05); }
+        .present-btn:active { transform: scale(0.95); }
+        .present-btn svg { width: 20px; height: 20px; fill: #242424; margin-left: 0; }
+
+        /* --- CONTROL PANEL (Controller Only) --- */
+        .control-panel {
+            background-color: var(--ui-bg);
+            background-image: linear-gradient(transparent, #eee);
+            padding: 35px 40px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+            z-index: 30;
+            transition: margin-bottom 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
+        }
+
+        .drawer-handle {
+            width: 100%;
+            height: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            cursor: pointer;
+            position: absolute;
+            top: 0; left: 0;
+            padding-top: 15px;
+            z-index: 40;
+        }
+        .drawer-pill {
+            width: 40px;
+            height: 4px;
+            background-color: #a0a0a0;
+            border-radius: 2px;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+        .drawer-handle:hover .drawer-pill {
+            background-color: #666;
+            transform: scaleY(1.5);
+        }
+
+        /* Auto-hide / Idle */
+        body.ui-idle:not(.is-live) .top-bar {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-20px);
+        }
+        body.ui-idle:not(.is-live) .control-panel {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .labels-wrapper {
+            position: relative;
+            height: 15px;
+            margin-bottom: 0px;
+            width: 100%;
+        }
+
+        .section-label {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            color: #666;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            position: absolute;
+            top: 0; left: 0;
+            opacity: 0;
+            transform: translateX(-10px);
+            pointer-events: none;
+        }
+        
+        .section-label.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Seamless Horizontal Swapping Logic */
+        .mode-controls-wrapper {
+            position: relative;
+            display: flex;
+            flex: 1; 
+            align-items: center;
+        }
+
+        .mode-control-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%) translateX(-20px);
+            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .mode-control-group.active {
+            pointer-events: auto;
+            opacity: 1;
+            visibility: visible;
+            position: relative; 
+            transform: translateY(0) translateX(0);
+        }
+
+        /* Seamless Input Group Fading */
+        .fade-group {
+            display: flex;
+            align-items: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 300px; 
+            opacity: 1;
+            overflow: hidden;
+            background: rgba(0,0,0,0.05);
+            padding: 5px 15px;
+            border-radius: 20px;
+            gap: 5px;
+        }
+        .fade-group.hidden {
+            max-width: 0;
+            opacity: 0;
+            padding-left: 0;
+            padding-right: 0;
+            margin-left: 0;
+            margin-right: 0;
+            pointer-events: none;
+            border: none;
+        }
+
+        .btn-icon, .btn-action {
+            background: var(--ui-element-bg);
+            border: none;
+            height: 36px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-family: 'Host Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--ui-text);
+            transition: background 0.2s ease, transform 0.1s ease, color 0.2s ease;
+            box-shadow: inset 0 0 25px #fff;
+        }
+        .btn-icon:hover, .btn-action:hover { background: var(--ui-element-bg-hover); }
+        .btn-icon:active, .btn-action:active { transform: translateY(1px); }
+
+        .btn-icon { width: 36px; font-size: 16px; }
+        .btn-action { padding: 0 20px; letter-spacing: 1px; }
+        
+        .btn-action.active, .btn-icon.active { background: #333; color: white; }
+
+        .input-group input[type="number"], 
+        .input-group input[type="time"] {
+            background: transparent;
+            border: none;
+            font-family: 'Host Grotesk', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            width: 24px;
+            text-align: center;
+            outline: none;
+        }
+        
+        .input-group input[type="time"] { width: 80px; }
+        .input-group input[type="number"]::-webkit-inner-spin-button { display: none; }
+        
+        .input-label {
+            font-size: 12px;
+            color: #666;
+            margin-right: 10px;
+            white-space: nowrap;
+        }
+
+        input[type="number"]{
+            border-radius: 99px;
+            border: none;
+            text-align: center;
+        }
+
+        /* Timezone Dropdown */
+        .timezone-select {
+            background: transparent;
+            border: none;
+            font-family: 'Host Grotesk', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ui-text);
+            outline: none;
+            cursor: pointer;
+            max-width: 180px;
+            text-overflow: ellipsis;
+        }
+
+        .flex-spacer { flex: 1; }
+
+        .message-input {
+            flex: 1;
+            height: 36px;
+            border-radius: 18px;
+            border: none;
+            padding: 0 20px;
+            font-family: 'Host Grotesk', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: box-shadow 0.2s ease;
+        }
+        .message-input:focus { box-shadow: 0 0 0 2px rgba(0,0,0,0.1); }
+
+        .vertical-divider {
+            width: 1px;
+            height: 24px;
+            background: rgba(0,0,0,0.1);
+            margin: 0 5px;
+        }
+
+        .footer-note {
+            position: absolute;
+            bottom: 10px;
+            right: 40px;
+            font-size: 9px;
+            font-weight: 300;
+            color: rgba(0,0,0,.5);
+            letter-spacing: 0.25px;
+        }
+
+        .footer-note a{
+            font-weight: 500;
+        }
+
+        /* --- MODALS --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75);
+            background-image: linear-gradient(transparent,rgba(0,0,0,0.75));
+            backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { 
+            display: flex; 
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            width: 300px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transform: scale(0.95) translateY(10px);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-title { font-weight: 600; margin-bottom: 16px; font-size: 16px; }
+        .modal-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .modal-description {
+            font-size: 10px;
+            color: #aaa;
+            margin: -5px 0 5px;
+        }
+        
+        .modal-content input[type="color"] {
+            width: 40px; height: 40px; border: none; border-radius: 8px; cursor: pointer;
+            padding: 0; background: none;
+        }
+        .modal-content select, .modal-content .font-input {
+            padding: 8px; border-radius: 8px; border: 1px solid #ccc; font-family: inherit; width: 150px;
+        }
+        .modal-content .font-input { outline: none; }
+        .modal-content .font-input:focus { border-color: #888; }
+        
+        .modal-close {
+            width: 100%; padding: 10px; border: none; background: #333; color: white;
+            border-radius: 8px; cursor: pointer; font-weight: 600; margin-top: 10px;
+            transition: background 0.2s ease;
+        }
+        .modal-close:hover { background: #000; }
+
+        /* --- LIVE MODE OVERRIDES --- */
+        body.is-live .top-bar,
+        body.is-live .control-panel {
+            display: none !important;
+        }
+        
+        body.is-live {
+            background: transparent !important; 
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- DISPLAY AREA -->
+    <div id="displayContainer" class="display-container">
+        <div id="timerText" class="timer-text">00:00:00.000</div>
+        
+        <div id="messageBanner" class="message-banner">
+            <div class="marquee-wrapper">
+                <!-- Inner span wraps text directly to guarantee perfect width reading -->
+                <div id="messageContent" class="message-content"><span id="messageInner"></span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOP BAR (Controller only) -->
+    <div class="top-bar" id="topBar">
+        <div class="mode-toggle">
+            <button class="mode-btn active" id="btnModeCountdown">COUNTDOWN</button>
+            <button class="mode-btn" id="btnModeClock">CLOCK</button>
+        </div>
+        <button class="present-btn" id="btnPresent" title="Open Live Popup">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+    </div>
+
+    <!-- CONTROL PANEL (Controller only) -->
+    <div class="control-panel" id="controlPanel">
+        
+        <div class="drawer-handle" id="drawerHandle" title="Toggle Control Panel">
+            <div class="drawer-pill"></div>
+        </div>
+
+        <!-- Seamless Labels Swapper -->
+        <div class="labels-wrapper">
+            <div class="section-label active" id="labelCountdown">COUNTDOWN SETTINGS</div>
+            <div class="section-label" id="labelClock">CLOCK SETTINGS</div>
+        </div>
+
+        <!-- Mode Specific Tools Row -->
+        <div class="control-row">
+            
+            <div class="mode-controls-wrapper">
+                
+                <!-- COUNTDOWN CONTROLS (Group 1) -->
+                <div class="mode-control-group active" id="groupCountdown">
+                    <button class="btn-icon active" id="btnToggleMsCountdown" title="Toggle Milliseconds">⏲️</button>
+                    <button class="btn-icon" id="btnTimeMode" title="Toggle Mode (Duration/Target Time)">⏳</button>
+                    
+                    <div class="fade-group" id="inputDuration">
+                        <input type="number" id="inHours" value="00" min="0" max="99">
+                        <span class="input-label">Hours</span>
+                        <input type="number" id="inMinutes" value="05" min="0" max="59">
+                        <span class="input-label">Minutes</span>
+                        <input type="number" id="inSeconds" value="00" min="0" max="59">
+                        <span class="input-label">Seconds</span>
+                    </div>
+
+                    <div class="fade-group hidden" id="inputTarget">
+                        <input type="time" id="inTargetTime" step="1">
+                        <span class="input-label">Target Time</span>
+                    </div>
+
+                    <button class="btn-action" id="btnStart">START</button>
+                    <button class="btn-action" id="btnPause">PAUSE</button>
+                    <button class="btn-action" id="btnReset">RESET</button>
+                </div>
+
+                <!-- CLOCK CONTROLS (Group 2) -->
+                <div class="mode-control-group" id="groupClock">
+                    <button class="btn-icon active" id="btnToggleMs" title="Toggle Milliseconds">⏲️</button>
+                    
+                    <div class="fade-group">
+                        <select id="timezoneSelect" class="timezone-select">
+                            <!-- Populated dynamically via JS -->
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Global Style Controls (Persistent Right Side) -->
+            <button class="btn-icon" id="btnBgColor" title="Background Color">🌈</button>
+            <button class="btn-icon" id="btnTransparent" title="Transparent Background">💠</button>
+            <button class="btn-icon" id="btnTimerFont" title="Timer Font & Color">🅰️</button>
+        </div>
+
+        <div class="section-label active" style="position: relative; margin-top: 5px; transform: none; opacity: 1;">MESSAGE BANNER</div>
+        <div class="control-row">
+            <input type="text" id="inMessage" class="message-input" placeholder="Message Text Input with **Markdown Formatting**">
+            
+            <button class="btn-action" id="btnShowMessage">SHOW</button>
+            
+            <div class="vertical-divider"></div>
+            
+            <button class="btn-icon" id="btnBannerBg" title="Banner Background">🌈</button>
+            <button class="btn-icon" id="btnBannerFont" title="Banner Font & Color">🅰️</button>
+        </div>
+
+        <div class="footer-note">Codecrafted by <a href="https://stefanus.hosea.id">Stefanus Hosea</a> • v2026.07.09.002</div>
+    </div>
+
+    <!-- MODALS -->
+    <!-- Color Modal -->
+    <div class="modal-overlay" id="colorModal">
+        <div class="modal-content">
+            <div class="modal-title" id="colorModalTitle">Pick Color</div>
+            <div class="modal-row">
+                <span>Color</span>
+                <input type="color" id="colorPickerInput">
+            </div>
+            <button class="modal-close" onclick="applyModals()">Apply</button>
+        </div>
+    </div>
+
+    <!-- Font Modal -->
+    <div class="modal-overlay" id="fontModal">
+        <div class="modal-content">
+            <div class="modal-title" id="fontModalTitle">Typography Settings</div>
+            <div class="modal-row" id="fontSizeRow">
+                <span>Font Size</span>
+                <input type="range" id="fontSizeInput" min="5" max="30" value="15" style="width: 100px;">
+            </div>
+            <div class="modal-row">
+                <span>Typeface</span>
+                <input type="text" id="fontPickerInput" placeholder="e.g. Poppins" class="font-input">
+            </div>
+            <div class="modal-description">
+                Enter a valid <a href="https://fonts.google.com" target="_blank" style="color:#333;">Google Fonts</a> name.
+            </div>
+            <div class="modal-row">
+                <span>Text Color</span>
+                <input type="color" id="fontColorInput" value="#ffffff">
+            </div>
+            <button class="modal-close" onclick="applyModals()">Apply</button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * APPLICATION STATE
+         */
+        const state = {
+            mainMode: 'countdown', // 'countdown' | 'clock'
+            countdownMode: 'duration', // 'duration' (⏳) | 'target' (⏱️)
+            timerStatus: 'stopped', // 'stopped' | 'running' | 'paused'
+            
+            // Time tracking
+            expectedEndTime: 0,
+            pauseTime: 0,
+            remainingMs: 300000, 
+            
+            // Clock Settings
+            showMilliseconds: true,
+            timezone: 'local',
+
+            // UI State
+            messageText: '',
+            messageVisible: false,
+            
+            // Styling
+            styles: {
+                bgColor: '#000000',
+                isTransparent: false,
+                timerFont: 'Host Grotesk',
+                timerFontSize: 15,
+                timerColor: '#ffffff',
+                bannerBg: '#ff0000',
+                bannerFont: 'Host Grotesk',
+                bannerColor: '#ffffff'
+            }
+        };
+
+        const LOCAL_STORAGE_KEY = 'stefanusTimerApp_state';
+        const urlParams = new URLSearchParams(window.location.search);
+        const IS_LIVE_VIEW = urlParams.get('live') === 'true';
+
+        /**
+         * DOM ELEMENTS
+         */
+        const DOM = {
+            displayContainer: document.getElementById('displayContainer'),
+            timerText: document.getElementById('timerText'),
+            messageBanner: document.getElementById('messageBanner'),
+            messageContent: document.getElementById('messageContent'),
+            messageInner: document.getElementById('messageInner'),
+            
+            // Modes
+            btnModeCountdown: document.getElementById('btnModeCountdown'),
+            btnModeClock: document.getElementById('btnModeClock'),
+            btnPresent: document.getElementById('btnPresent'),
+            
+            // Containers
+            controlPanel: document.getElementById('controlPanel'),
+            drawerHandle: document.getElementById('drawerHandle'),
+
+            // Groups & Labels
+            labelCountdown: document.getElementById('labelCountdown'),
+            labelClock: document.getElementById('labelClock'),
+            groupCountdown: document.getElementById('groupCountdown'),
+            groupClock: document.getElementById('groupClock'),
+
+            // Countdown Controls
+            btnToggleMsCountdown: document.getElementById('btnToggleMsCountdown'),
+            btnTimeMode: document.getElementById('btnTimeMode'),
+            inputDuration: document.getElementById('inputDuration'),
+            inputTarget: document.getElementById('inputTarget'),
+            inHours: document.getElementById('inHours'),
+            inMinutes: document.getElementById('inMinutes'),
+            inSeconds: document.getElementById('inSeconds'),
+            inTargetTime: document.getElementById('inTargetTime'),
+            
+            btnStart: document.getElementById('btnStart'),
+            btnPause: document.getElementById('btnPause'),
+            btnReset: document.getElementById('btnReset'),
+            
+            // Clock Controls
+            btnToggleMs: document.getElementById('btnToggleMs'),
+            timezoneSelect: document.getElementById('timezoneSelect'),
+
+            // Messages
+            inMessage: document.getElementById('inMessage'),
+            btnShowMessage: document.getElementById('btnShowMessage'),
+            
+            // Style Controls
+            btnBgColor: document.getElementById('btnBgColor'),
+            btnTransparent: document.getElementById('btnTransparent'),
+            btnTimerFont: document.getElementById('btnTimerFont'),
+            btnBannerBg: document.getElementById('btnBannerBg'),
+            btnBannerFont: document.getElementById('btnBannerFont'),
+
+            // Modals
+            colorModal: document.getElementById('colorModal'),
+            colorModalTitle: document.getElementById('colorModalTitle'),
+            colorPickerInput: document.getElementById('colorPickerInput'),
+            
+            fontModal: document.getElementById('fontModal'),
+            fontModalTitle: document.getElementById('fontModalTitle'),
+            fontSizeRow: document.getElementById('fontSizeRow'),
+            fontSizeInput: document.getElementById('fontSizeInput'),
+            fontPickerInput: document.getElementById('fontPickerInput'),
+            fontColorInput: document.getElementById('fontColorInput'),
+        };
+
+        let currentModalTarget = null; 
+        let modalInitialState = null;
+        let animationFrameId = null;
+
+        // Drawer & Idle State
+        let isControlPanelCollapsed = false;
+        let idleTimeout = null;
+        let isIdle = false;
+        let lastForceHideTime = 0;
+
+        /**
+         * INITIALIZATION
+         */
+        function init() {
+            if (!IS_LIVE_VIEW) populateTimezones();
+
+            if (IS_LIVE_VIEW) {
+                document.body.classList.add('is-live');
+                window.addEventListener('storage', handleStorageEvent);
+                loadStateFromStorage();
+                applyStateToUI();
+            } else {
+                setupEventListeners();
+                loadStateFromStorage();
+                updateInputsFromState(); 
+                applyStateToUI();
+                syncState(); 
+            }
+            
+            requestAnimationFrame(tick);
+        }
+
+        function populateTimezones() {
+            DOM.timezoneSelect.innerHTML = '';
+            
+            const localOpt = document.createElement('option');
+            localOpt.value = 'local';
+            localOpt.textContent = 'Local Timezone';
+            DOM.timezoneSelect.appendChild(localOpt);
+
+            try {
+                const tzs = Intl.supportedValuesOf('timeZone');
+                const now = new Date();
+                
+                const tzData = tzs.map(tz => {
+                    const formatter = new Intl.DateTimeFormat('en', { timeZone: tz, timeZoneName: 'shortOffset' });
+                    const parts = formatter.formatToParts(now);
+                    const offsetPart = parts.find(p => p.type === 'timeZoneName');
+                    
+                    let offsetString = 'UTC+0';
+                    let offsetVal = 0;
+                    
+                    if (offsetPart && offsetPart.value) {
+                        const raw = offsetPart.value;
+                        offsetString = raw.replace('GMT', 'UTC');
+                        if (offsetString === 'UTC') offsetString = 'UTC+0';
+                        
+                        // Parse offset minutes for sorting
+                        const match = raw.match(/GMT([+-])(\d{1,2})(?::(\d{2}))?/);
+                        if (match) {
+                            const sign = match[1] === '+' ? 1 : -1;
+                            const h = parseInt(match[2], 10);
+                            const m = match[3] ? parseInt(match[3], 10) : 0;
+                            offsetVal = sign * (h * 60 + m);
+                        }
+                    }
+                    return { tz, label: `${offsetString} • ${tz.replace(/_/g, ' ')}`, offsetVal };
+                });
+                
+                // Sort array by numeric offset, then alphabetically by name as fallback
+                tzData.sort((a, b) => {
+                    if (a.offsetVal !== b.offsetVal) return a.offsetVal - b.offsetVal;
+                    return a.tz.localeCompare(b.tz);
+                });
+
+                tzData.forEach(data => {
+                    const opt = document.createElement('option');
+                    opt.value = data.tz;
+                    opt.textContent = data.label;
+                    DOM.timezoneSelect.appendChild(opt);
+                });
+            } catch(e) {
+                console.warn('Intl timezone API not supported in this browser.');
+            }
+        }
+
+        /**
+         * CORE TIMER LOGIC
+         */
+        function tick() {
+            const now = Date.now();
+
+            if (state.mainMode === 'clock') {
+                updateTimerDisplayClock(now);
+            } else if (state.mainMode === 'countdown') {
+                if (state.timerStatus === 'running') {
+                    state.remainingMs = state.expectedEndTime - now;
+                    if (state.remainingMs <= 0) {
+                        state.remainingMs = 0;
+                        state.timerStatus = 'stopped';
+                        if(!IS_LIVE_VIEW) syncState();
+                    }
+                }
+                updateTimerDisplayCountdown(state.remainingMs);
+            }
+
+            if (!IS_LIVE_VIEW && state.timerStatus === 'running') {
+               syncState(true); 
+            }
+
+            checkMarquee();
+            animationFrameId = requestAnimationFrame(tick);
+        }
+
+        function formatTime(ms) {
+            if (ms < 0) ms = 0;
+            const hours = Math.floor(ms / (1000 * 60 * 60));
+            const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+            const milliseconds = ms % 1000;
+
+            const hStr = hours.toString().padStart(2, '0');
+            const mStr = minutes.toString().padStart(2, '0');
+            const sStr = seconds.toString().padStart(2, '0');
+            
+            if (state.showMilliseconds) {
+                const msStr = milliseconds.toString().padStart(3, '0');
+                return `${hStr}:${mStr}:${sStr}.${msStr}`;
+            }
+            return `${hStr}:${mStr}:${sStr}`;
+        }
+
+        function updateTimerDisplayCountdown(ms) {
+            DOM.timerText.textContent = formatTime(ms);
+        }
+
+        function updateTimerDisplayClock(now) {
+            let targetDate;
+            if (state.timezone && state.timezone !== 'local') {
+                try {
+                    // Offset date based on timezone string
+                    const tzString = new Date(now).toLocaleString('en-US', { timeZone: state.timezone });
+                    targetDate = new Date(tzString);
+                } catch(e) { 
+                    targetDate = new Date(now); 
+                }
+            } else {
+                targetDate = new Date(now);
+            }
+            
+            const h = targetDate.getHours().toString().padStart(2, '0');
+            const m = targetDate.getMinutes().toString().padStart(2, '0');
+            const s = targetDate.getSeconds().toString().padStart(2, '0');
+            
+            if (state.showMilliseconds) {
+                const ms = new Date(now).getMilliseconds().toString().padStart(3, '0');
+                DOM.timerText.textContent = `${h}:${m}:${s}.${ms}`;
+            } else {
+                DOM.timerText.textContent = `${h}:${m}:${s}`;
+            }
+        }
+
+        /**
+         * CONTROLLER ACTIONS
+         */
+        function startTimer() {
+            if (state.mainMode !== 'countdown') return;
+            const now = Date.now();
+            
+            if (state.timerStatus === 'paused') {
+                const pausedDuration = now - state.pauseTime;
+                state.expectedEndTime += pausedDuration;
+            } else {
+                if (state.countdownMode === 'duration') {
+                    const h = parseInt(DOM.inHours.value) || 0;
+                    const m = parseInt(DOM.inMinutes.value) || 0;
+                    const s = parseInt(DOM.inSeconds.value) || 0;
+                    state.remainingMs = (h * 3600 + m * 60 + s) * 1000;
+                    state.expectedEndTime = now + state.remainingMs;
+                } else {
+                    const targetParts = DOM.inTargetTime.value.split(':');
+                    if (targetParts.length >= 2) {
+                        const target = new Date(now);
+                        target.setHours(parseInt(targetParts[0]), parseInt(targetParts[1]), targetParts[2] ? parseInt(targetParts[2]) : 0, 0);
+                        if (target.getTime() <= now) target.setDate(target.getDate() + 1);
+                        state.expectedEndTime = target.getTime();
+                        state.remainingMs = state.expectedEndTime - now;
+                    }
+                }
+            }
+            state.timerStatus = 'running';
+            syncState();
+            updateUIState();
+        }
+
+        function pauseTimer() {
+            if (state.timerStatus === 'running') {
+                state.timerStatus = 'paused';
+                state.pauseTime = Date.now();
+                syncState();
+                updateUIState();
+            }
+        }
+
+        function resetTimer() {
+            state.timerStatus = 'stopped';
+            if (state.countdownMode === 'duration') {
+                const h = parseInt(DOM.inHours.value) || 0;
+                const m = parseInt(DOM.inMinutes.value) || 0;
+                const s = parseInt(DOM.inSeconds.value) || 0;
+                state.remainingMs = (h * 3600 + m * 60 + s) * 1000;
+            } else {
+                state.remainingMs = 0;
+            }
+            syncState();
+            updateUIState();
+        }
+
+        /**
+         * UI UPDATES & SYNC
+         */
+        function parseMarkdown(text) {
+            if (!text) return '';
+            let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            return html;
+        }
+        
+        function loadGoogleFont(fontName) {
+            if (!fontName) return;
+            const formattedName = fontName.trim().replace(/\s+/g, '+');
+            const fontUrl = `https://fonts.googleapis.com/css2?family=${formattedName}:wght@400;500;600;700&display=swap`;
+            
+            // Prevent injecting duplicate stylesheets
+            if (!document.querySelector(`link[href^="https://fonts.googleapis.com/css2?family=${formattedName}"]`)) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = fontUrl;
+                // Fallback for older font formats if css2 weight syntax fails
+                link.onerror = () => { link.href = `https://fonts.googleapis.com/css?family=${formattedName}:400,700&display=swap`; };
+                document.head.appendChild(link);
+            }
+        }
+
+        function applyStateToUI() {
+            // Clean legacy formatting just in case it's in localStorage
+            const tFont = state.styles.timerFont.replace(/['",]|sans-serif|serif|monospace/g, '').trim() || 'Host Grotesk';
+            const bFont = state.styles.bannerFont.replace(/['",]|sans-serif|serif|monospace/g, '').trim() || 'Host Grotesk';
+            
+            // Load fonts dynamically
+            loadGoogleFont(tFont);
+            loadGoogleFont(bFont);
+
+            // Apply Styles
+            document.documentElement.style.setProperty('--bg-color', state.styles.isTransparent ? 'transparent' : state.styles.bgColor);
+            document.documentElement.style.setProperty('--timer-font', `"${tFont}", sans-serif`);
+            document.documentElement.style.setProperty('--timer-font-size', `${state.styles.timerFontSize}vw`);
+            document.documentElement.style.setProperty('--timer-color', state.styles.timerColor);
+            document.documentElement.style.setProperty('--banner-bg', state.styles.bannerBg);
+            document.documentElement.style.setProperty('--banner-font', `"${bFont}", sans-serif`);
+            document.documentElement.style.setProperty('--banner-color', state.styles.bannerColor);
+
+            if (state.styles.isTransparent) {
+                DOM.displayContainer.classList.add('is-transparent');
+            } else {
+                DOM.displayContainer.classList.remove('is-transparent');
+            }
+
+            // Message Update (injecting into Inner Span for true width calculations)
+            DOM.messageInner.innerHTML = parseMarkdown(state.messageText);
+            
+            if (state.messageVisible) {
+                DOM.messageBanner.classList.add('show');
+                if(!IS_LIVE_VIEW) DOM.btnShowMessage.classList.add('active');
+            } else {
+                DOM.messageBanner.classList.remove('show');
+                if(!IS_LIVE_VIEW) DOM.btnShowMessage.classList.remove('active');
+            }
+            
+            if (!IS_LIVE_VIEW) updateUIState();
+        }
+
+        function updateUIState() {
+            const isCountdown = state.mainMode === 'countdown';
+            
+            // Mode buttons
+            DOM.btnModeCountdown.classList.toggle('active', isCountdown);
+            DOM.btnModeClock.classList.toggle('active', !isCountdown);
+
+            // Seamlessly swap between Countdown settings and Clock settings
+            DOM.labelCountdown.classList.toggle('active', isCountdown);
+            DOM.labelClock.classList.toggle('active', !isCountdown);
+            DOM.groupCountdown.classList.toggle('active', isCountdown);
+            DOM.groupClock.classList.toggle('active', !isCountdown);
+
+            // Buttons state within countdown
+            DOM.btnStart.classList.toggle('active', state.timerStatus === 'running');
+            DOM.btnPause.style.opacity = (state.timerStatus !== 'running') ? '0.5' : '1';
+
+            // Seamless Duration/Target time toggle
+            if (state.countdownMode === 'duration') {
+                DOM.btnTimeMode.textContent = '⏳';
+                DOM.inputDuration.classList.remove('hidden');
+                DOM.inputTarget.classList.add('hidden');
+            } else {
+                DOM.btnTimeMode.textContent = '⏱️';
+                DOM.inputDuration.classList.add('hidden');
+                DOM.inputTarget.classList.remove('hidden');
+            }
+            
+            // Clock Tools
+            DOM.btnToggleMs.classList.toggle('active', state.showMilliseconds);
+            DOM.btnToggleMsCountdown.classList.toggle('active', state.showMilliseconds);
+            DOM.timezoneSelect.value = state.timezone;
+            
+            // Message Input
+            if(DOM.inMessage.value !== state.messageText) DOM.inMessage.value = state.messageText;
+        }
+
+        function updateInputsFromState() {
+            const h = Math.floor(state.remainingMs / 3600000);
+            const m = Math.floor((state.remainingMs % 3600000) / 60000);
+            const s = Math.floor((state.remainingMs % 60000) / 1000);
+            DOM.inHours.value = h.toString().padStart(2, '0');
+            DOM.inMinutes.value = m.toString().padStart(2, '0');
+            DOM.inSeconds.value = s.toString().padStart(2, '0');
+        }
+
+        function checkMarquee() {
+            if (!state.messageVisible) return;
+            
+            const wrapperWidth = document.querySelector('.marquee-wrapper').clientWidth;
+            const textWidth = DOM.messageInner.offsetWidth;
+
+            if (textWidth > wrapperWidth) {
+                if (!DOM.messageBanner.classList.contains('is-marquee')) {
+                    DOM.messageBanner.classList.add('is-marquee');
+                }
+                const duration = ((textWidth + wrapperWidth) / 150) + 2; 
+                DOM.messageContent.style.animationDuration = `${duration}s`;
+            } else {
+                if (DOM.messageBanner.classList.contains('is-marquee')) {
+                    DOM.messageBanner.classList.remove('is-marquee');
+                    DOM.messageContent.style.animationDuration = '';
+                }
+            }
+        }
+
+        /**
+         * STATE SYNC (localStorage)
+         */
+        function syncState(isTickUpdate = false) {
+            try { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state)); } 
+            catch (e) { console.warn("localStorage sync failed", e); }
+        }
+
+        function loadStateFromStorage() {
+            try {
+                const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (saved) { Object.assign(state, JSON.parse(saved)); }
+            } catch (e) { console.warn("Failed to load state", e); }
+        }
+
+        function handleStorageEvent(e) {
+            if (e.key === LOCAL_STORAGE_KEY && e.newValue) {
+                Object.assign(state, JSON.parse(e.newValue));
+                applyStateToUI();
+            }
+        }
+
+        /**
+         * EVENT LISTENERS
+         */
+        function setupEventListeners() {
+            // Idle Timer Logic
+            function resetIdleTimer() {
+                if (IS_LIVE_VIEW) return;
+                
+                if (isIdle) {
+                    // Prevent accidental wakeups right after forcing hide (e.g. from micro mouse movements)
+                    if (Date.now() - lastForceHideTime < 500) return;
+
+                    isIdle = false;
+                    document.body.classList.remove('ui-idle');
+                    // Restore margin-bottom based on drawer state
+                    if (isControlPanelCollapsed) {
+                        DOM.controlPanel.style.marginBottom = `-${DOM.controlPanel.offsetHeight - 35}px`;
+                    } else {
+                        DOM.controlPanel.style.marginBottom = '0px';
+                    }
+                }
+
+                clearTimeout(idleTimeout);
+                idleTimeout = setTimeout(() => {
+                    isIdle = true;
+                    document.body.classList.add('ui-idle');
+                    // fully hide the control panel by pushing it down its entire height
+                    DOM.controlPanel.style.marginBottom = `-${DOM.controlPanel.offsetHeight}px`;
+                }, 10000);
+            }
+
+            window.addEventListener('mousemove', resetIdleTimer);
+            window.addEventListener('mousedown', resetIdleTimer);
+            window.addEventListener('keydown', resetIdleTimer);
+            window.addEventListener('touchstart', resetIdleTimer);
+            window.addEventListener('wheel', resetIdleTimer);
+            resetIdleTimer(); // Init
+
+            // Immediate Hide on Display Click
+            DOM.displayContainer.addEventListener('mousedown', (e) => {
+                if (IS_LIVE_VIEW) return;
+                
+                // Only trigger if clicking directly on the background or the timer text itself
+                if (e.target !== DOM.displayContainer && e.target !== DOM.timerText) return;
+
+                e.stopPropagation(); // Prevent window mousedown from resetting the timer instantly
+                clearTimeout(idleTimeout);
+                
+                isIdle = true;
+                lastForceHideTime = Date.now();
+                document.body.classList.add('ui-idle');
+                DOM.controlPanel.style.marginBottom = `-${DOM.controlPanel.offsetHeight}px`;
+            });
+
+            // Drawer Toggle
+            DOM.drawerHandle.addEventListener('click', () => {
+                isControlPanelCollapsed = !isControlPanelCollapsed;
+                if (isControlPanelCollapsed) {
+                    DOM.controlPanel.style.marginBottom = `-${DOM.controlPanel.offsetHeight - 35}px`;
+                } else {
+                    DOM.controlPanel.style.marginBottom = '0px';
+                }
+            });
+
+            // Handle resize to fix margin calculations
+            window.addEventListener('resize', () => {
+                if (IS_LIVE_VIEW) return;
+                // Temporarily disable transition for instant snap
+                DOM.controlPanel.style.transition = 'none';
+                if (isIdle) {
+                    DOM.controlPanel.style.marginBottom = `-${DOM.controlPanel.offsetHeight}px`;
+                } else if (isControlPanelCollapsed) {
+                    DOM.controlPanel.style.marginBottom = `-${DOM.controlPanel.offsetHeight - 35}px`;
+                } else {
+                    DOM.controlPanel.style.marginBottom = '0px';
+                }
+                // Force reflow and re-enable transition
+                void DOM.controlPanel.offsetHeight;
+                DOM.controlPanel.style.transition = '';
+            });
+
+            // Keyboard Shortcuts
+            window.addEventListener('keydown', (e) => {
+                const activeTag = document.activeElement ? document.activeElement.tagName : '';
+                if (['INPUT', 'TEXTAREA', 'SELECT'].includes(activeTag)) return;
+
+                const key = e.key.toLowerCase();
+                switch (key) {
+                    case 'q':
+                        if (state.mainMode === 'countdown') DOM.btnModeClock.click();
+                        else DOM.btnModeCountdown.click();
+                        break;
+                    case ' ':
+                        e.preventDefault();
+                        if (state.mainMode !== 'countdown') return;
+                        if (state.timerStatus === 'running') DOM.btnPause.click();
+                        else DOM.btnStart.click();
+                        break;
+                    case 'r':
+                        if (state.mainMode === 'countdown') DOM.btnReset.click();
+                        break;
+                    case 't':
+                        DOM.btnTransparent.click();
+                        break;
+                    case 'p':
+                        DOM.btnPresent.click();
+                        break;
+                    case 'm':
+                        DOM.btnToggleMs.click();
+                        break;
+                    case '1':
+                        DOM.btnShowMessage.click();
+                        break;
+                }
+            });
+
+            // Main Modes
+            DOM.btnModeCountdown.addEventListener('click', () => { state.mainMode = 'countdown'; syncState(); applyStateToUI(); resetTimer(); });
+            DOM.btnModeClock.addEventListener('click', () => { state.mainMode = 'clock'; syncState(); applyStateToUI(); });
+            
+            // Present Mode Popup
+            DOM.btnPresent.addEventListener('click', () => {
+                const url = new URL(window.location.href);
+                url.searchParams.set('live', 'true');
+                window.open(url.href, 'TimerLiveView', 'width=1280,height=720,menubar=no,toolbar=no,location=no,status=no');
+            });
+
+            // Countdown Controls
+            DOM.btnToggleMsCountdown.addEventListener('click', () => {
+                state.showMilliseconds = !state.showMilliseconds;
+                syncState(); applyStateToUI();
+            });
+
+            DOM.btnTimeMode.addEventListener('click', () => {
+                state.countdownMode = state.countdownMode === 'duration' ? 'target' : 'duration';
+                syncState(); updateUIState();
+            });
+
+            DOM.btnStart.addEventListener('click', startTimer);
+            DOM.btnPause.addEventListener('click', pauseTimer);
+            DOM.btnReset.addEventListener('click', resetTimer);
+
+            const handleInputChange = () => { if(state.timerStatus === 'stopped') resetTimer(); };
+            DOM.inHours.addEventListener('change', handleInputChange);
+            DOM.inMinutes.addEventListener('change', handleInputChange);
+            DOM.inSeconds.addEventListener('change', handleInputChange);
+            DOM.inTargetTime.addEventListener('change', handleInputChange);
+
+            // Clock Controls
+            DOM.btnToggleMs.addEventListener('click', () => {
+                state.showMilliseconds = !state.showMilliseconds;
+                syncState(); applyStateToUI();
+            });
+
+            DOM.timezoneSelect.addEventListener('change', (e) => {
+                state.timezone = e.target.value;
+                syncState(); applyStateToUI();
+            });
+
+            // Message Setup
+            DOM.inMessage.addEventListener('input', (e) => {
+                state.messageText = e.target.value;
+                syncState(); applyStateToUI();
+            });
+            DOM.btnShowMessage.addEventListener('click', () => {
+                state.messageVisible = !state.messageVisible;
+                syncState(); applyStateToUI();
+            });
+
+            // Modals
+            DOM.colorModal.addEventListener('click', cancelModals);
+            DOM.fontModal.addEventListener('click', cancelModals);
+
+            DOM.btnBgColor.addEventListener('click', () => openColorModal('bg'));
+            DOM.btnBannerBg.addEventListener('click', () => openColorModal('bannerBg'));
+            DOM.btnTransparent.addEventListener('click', () => {
+                state.styles.isTransparent = !state.styles.isTransparent;
+                syncState(); applyStateToUI();
+            });
+
+            DOM.btnTimerFont.addEventListener('click', () => openFontModal('timer'));
+            DOM.btnBannerFont.addEventListener('click', () => openFontModal('banner'));
+
+            DOM.colorPickerInput.addEventListener('input', (e) => {
+                if(currentModalTarget === 'bg') state.styles.bgColor = e.target.value;
+                if(currentModalTarget === 'bannerBg') state.styles.bannerBg = e.target.value;
+                syncState(); applyStateToUI();
+            });
+
+            // Use 'change' so it triggers when pressing Enter or clicking away to prevent spamming Google Font API
+            DOM.fontPickerInput.addEventListener('change', (e) => {
+                const cleanedFont = e.target.value.replace(/['",]|sans-serif|serif|monospace/g, '').trim();
+                if(currentModalTarget === 'timer') state.styles.timerFont = cleanedFont;
+                if(currentModalTarget === 'banner') state.styles.bannerFont = cleanedFont;
+                syncState(); applyStateToUI();
+            });
+            
+            DOM.fontColorInput.addEventListener('input', (e) => {
+                if(currentModalTarget === 'timer') state.styles.timerColor = e.target.value;
+                if(currentModalTarget === 'banner') state.styles.bannerColor = e.target.value;
+                syncState(); applyStateToUI();
+            });
+
+            DOM.fontSizeInput.addEventListener('input', (e) => {
+                if(currentModalTarget === 'timer') {
+                    state.styles.timerFontSize = e.target.value;
+                    syncState(); applyStateToUI();
+                }
+            });
+        }
+
+        // Modal Helpers
+        function openColorModal(target) {
+            currentModalTarget = target;
+            modalInitialState = target === 'bg' ? state.styles.bgColor : state.styles.bannerBg;
+            DOM.colorModalTitle.textContent = target === 'bg' ? 'Background Color' : 'Banner Background';
+            DOM.colorPickerInput.value = modalInitialState;
+            DOM.colorModal.classList.add('active');
+        }
+
+        function openFontModal(target) {
+            currentModalTarget = target;
+            modalInitialState = {
+                font: target === 'timer' ? state.styles.timerFont : state.styles.bannerFont,
+                size: target === 'timer' ? state.styles.timerFontSize : null,
+                color: target === 'timer' ? state.styles.timerColor : state.styles.bannerColor
+            };
+            
+            // Clean font name for the input field display
+            const cleanFontDisplay = modalInitialState.font.replace(/['",]|sans-serif|serif|monospace/g, '').trim();
+            
+            DOM.fontModalTitle.textContent = target === 'timer' ? 'Timer Typography' : 'Banner Typography';
+            DOM.fontPickerInput.value = cleanFontDisplay;
+            DOM.fontColorInput.value = modalInitialState.color;
+            
+            if (target === 'timer') {
+                DOM.fontSizeRow.style.display = 'flex';
+                DOM.fontSizeInput.value = modalInitialState.size;
+            } else {
+                DOM.fontSizeRow.style.display = 'none';
+            }
+            
+            DOM.fontModal.classList.add('active');
+        }
+
+        function applyModals() {
+            DOM.colorModal.classList.remove('active');
+            DOM.fontModal.classList.remove('active');
+            currentModalTarget = null;
+            modalInitialState = null;
+        }
+
+        function cancelModals(e) {
+            if (e.target !== e.currentTarget) return; // Only close if overlay backdrop is clicked
+            
+            // Revert changes if cancelled
+            if (currentModalTarget === 'bg') state.styles.bgColor = modalInitialState;
+            if (currentModalTarget === 'bannerBg') state.styles.bannerBg = modalInitialState;
+            if (currentModalTarget === 'timer') {
+                state.styles.timerFont = modalInitialState.font;
+                state.styles.timerFontSize = modalInitialState.size;
+                state.styles.timerColor = modalInitialState.color;
+            }
+            if (currentModalTarget === 'banner') {
+                state.styles.bannerFont = modalInitialState.font;
+                state.styles.bannerColor = modalInitialState.color;
+            }
+            
+            syncState(); applyStateToUI();
+            applyModals();
+        }
+
+        init();
+
+    </script>
+</body>
+</html>
