@@ -16,7 +16,7 @@
     <meta property="og:description" content="Tailor-made countdown/clock display for live event purposes.">
     <meta property="og:type" content="website"/>
     <meta property="og:url" content="https://tinner.hosea.id"/>
-    <meta property="og:image" content="https://tinner.hosea.id/shareable.jpg"/>
+    <meta property="og:image" content="https://tinner.hosea.id/share.jpg"/>
     <meta property="og:image:type" content="image/jpeg"/>
     <meta property="og:image:width" content="1200"/>
     <meta property="og:image:height" content="630"/>
@@ -46,7 +46,7 @@
             --timer-font: 'Host Grotesk', sans-serif;
             --timer-font-size: 15vw;
             --timer-color: #ffffff;
-            --banner-bg: #ff0000;
+            --banner-bg: #b10000;
             --banner-font: 'Host Grotesk', sans-serif;
             --banner-color: #ffffff;
             
@@ -630,8 +630,11 @@
             </div>
 
             <!-- Global Style Controls (Persistent Right Side) -->
-            <button class="btn-icon" id="btnBgColor" title="Background Color">🌈</button>
+            <button class="btn-icon" id="btnPresetDark" title="Preset: Dark">⚫️</button>
+            <button class="btn-icon" id="btnPresetYellow" title="Preset: Yellow">🟡</button>
+            <button class="btn-icon" id="btnPresetWhite" title="Preset: Light">⚪️</button>
             <button class="btn-icon" id="btnTransparent" title="Transparent Background">💠</button>
+            <button class="btn-icon" id="btnBgColor" title="Background Color">🌈</button>
             <button class="btn-icon" id="btnTimerFont" title="Timer Font & Color">🅰️</button>
         </div>
 
@@ -643,6 +646,10 @@
             
             <div class="vertical-divider"></div>
             
+            <button class="btn-icon" id="btnBannerPresetRed" title="Preset: Red">🔴</button>
+            <button class="btn-icon" id="btnBannerPresetYellow" title="Preset: Yellow">🟡</button>
+            <button class="btn-icon" id="btnBannerPresetWhite" title="Preset: Light">⚪️</button>
+            <button class="btn-icon" id="btnBannerPresetDark" title="Preset: Dark">⚫️</button>
             <button class="btn-icon" id="btnBannerBg" title="Banner Background">🌈</button>
             <button class="btn-icon" id="btnBannerFont" title="Banner Font & Color">🅰️</button>
         </div>
@@ -715,7 +722,7 @@
                 timerFont: 'Host Grotesk',
                 timerFontSize: 15,
                 timerColor: '#ffffff',
-                bannerBg: '#ff0000',
+                bannerBg: '#b10000',
                 bannerFont: 'Host Grotesk',
                 bannerColor: '#ffffff'
             }
@@ -773,6 +780,14 @@
             btnShowMessage: document.getElementById('btnShowMessage'),
             
             // Style Controls
+            btnPresetWhite: document.getElementById('btnPresetWhite'),
+            btnPresetDark: document.getElementById('btnPresetDark'),
+            btnPresetYellow: document.getElementById('btnPresetYellow'),
+            btnBannerPresetRed: document.getElementById('btnBannerPresetRed'),
+            btnBannerPresetYellow: document.getElementById('btnBannerPresetYellow'),
+            btnBannerPresetWhite: document.getElementById('btnBannerPresetWhite'),
+            btnBannerPresetDark: document.getElementById('btnBannerPresetDark'),
+
             btnBgColor: document.getElementById('btnBgColor'),
             btnTransparent: document.getElementById('btnTransparent'),
             btnTimerFont: document.getElementById('btnTimerFont'),
@@ -1275,6 +1290,16 @@
                     case '1':
                         DOM.btnShowMessage.click();
                         break;
+                    case 'w':
+                        if (state.styles.bgColor === '#ffffff') {
+                            DOM.btnPresetDark.click();
+                        } else {
+                            DOM.btnPresetWhite.click();
+                        }
+                        break;
+                    case 'y':
+                        DOM.btnPresetYellow.click();
+                        break;
                 }
             });
 
@@ -1330,6 +1355,16 @@
                 state.messageVisible = !state.messageVisible;
                 syncState(); applyStateToUI();
             });
+
+            // Color Presets
+            DOM.btnPresetWhite.addEventListener('click', () => { state.styles.bgColor = '#ffffff'; state.styles.timerColor = '#000000'; syncState(); applyStateToUI(); });
+            DOM.btnPresetDark.addEventListener('click', () => { state.styles.bgColor = '#000000'; state.styles.timerColor = '#ffffff'; syncState(); applyStateToUI(); });
+            DOM.btnPresetYellow.addEventListener('click', () => { state.styles.bgColor = '#fdee00'; state.styles.timerColor = '#000000'; syncState(); applyStateToUI(); });
+
+            DOM.btnBannerPresetRed.addEventListener('click', () => { state.styles.bannerBg = '#b10000'; state.styles.bannerColor = '#ffffff'; syncState(); applyStateToUI(); });
+            DOM.btnBannerPresetYellow.addEventListener('click', () => { state.styles.bannerBg = '#fdee00'; state.styles.bannerColor = '#000000'; syncState(); applyStateToUI(); });
+            DOM.btnBannerPresetWhite.addEventListener('click', () => { state.styles.bannerBg = '#ffffff'; state.styles.bannerColor = '#000000'; syncState(); applyStateToUI(); });
+            DOM.btnBannerPresetDark.addEventListener('click', () => { state.styles.bannerBg = '#000000'; state.styles.bannerColor = '#ffffff'; syncState(); applyStateToUI(); });
 
             // Modals
             DOM.colorModal.addEventListener('click', cancelModals);
