@@ -110,6 +110,20 @@
             z-index: 10;
             transition: color 0.4s ease;
         }
+        
+        .timer-text span {
+            display: inline-block;
+        }
+        
+        /* Fade animation for changing digits */
+        .fade-changed {
+            animation: digitFade 0.4s ease-out;
+        }
+        
+        @keyframes digitFade {
+            0% { opacity: 0.2; }
+            100% { opacity: 1; }
+        }
 
         /* Message Banner */
         .message-banner {
@@ -896,6 +910,7 @@
         let currentModalTarget = null; 
         let modalInitialState = null;
         let animationFrameId = null;
+        let previousTimeStr = "";
 
         // Drawer & Idle State
         let isControlPanelCollapsed = false;
@@ -1025,8 +1040,45 @@
             return `${hStr}:${mStr}:${sStr}`;
         }
 
+        function renderTimeString(timeStr) {
+            if (previousTimeStr === timeStr) return;
+
+            // Rebuild the DOM spans entirely if the string length shifts 
+            // (e.g. toggling milliseconds) or upon initial setup.
+            if (previousTimeStr.length !== timeStr.length || DOM.timerText.children.length === 0) {
+                DOM.timerText.innerHTML = '';
+                for (let char of timeStr) {
+                    const span = document.createElement('span');
+                    span.textContent = char;
+                    DOM.timerText.appendChild(span);
+                }
+            } else {
+                const spans = DOM.timerText.children;
+                const dotIndex = timeStr.indexOf('.');
+                
+                // Compare new string against previous and animate only changing digits.
+                for (let i = 0; i < timeStr.length; i++) {
+                    if (previousTimeStr[i] !== timeStr[i]) {
+                        spans[i].textContent = timeStr[i];
+                        
+                        // Avoid animating structural characters (:, .) 
+                        // and skip animating milliseconds to prevent flickering.
+                        if (timeStr[i] !== ':' && timeStr[i] !== '.') {
+                            if (dotIndex === -1 || i < dotIndex) {
+                                spans[i].classList.remove('fade-changed');
+                                void spans[i].offsetWidth; // trigger reflow to restart animation
+                                spans[i].classList.add('fade-changed');
+                            }
+                        }
+                    }
+                }
+            }
+            
+            previousTimeStr = timeStr;
+        }
+
         function updateTimerDisplayCountdown(ms) {
-            DOM.timerText.textContent = formatTime(ms);
+            renderTimeString(formatTime(ms));
         }
 
         function updateTimerDisplayClock(now) {
@@ -1049,9 +1101,9 @@
             
             if (state.showMilliseconds) {
                 const ms = new Date(now).getMilliseconds().toString().padStart(3, '0');
-                DOM.timerText.textContent = `${h}:${m}:${s}.${ms}`;
+                renderTimeString(`${h}:${m}:${s}.${ms}`);
             } else {
-                DOM.timerText.textContent = `${h}:${m}:${s}`;
+                renderTimeString(`${h}:${m}:${s}`);
             }
         }
 
@@ -1306,7 +1358,7 @@
                 if (IS_LIVE_VIEW) return;
                 
                 // Only trigger if clicking directly on the background or the timer text itself
-                if (e.target !== DOM.displayContainer && e.target !== DOM.timerText) return;
+                if (e.target !== DOM.displayContainer && e.target !== DOM.timerText && e.target.parentElement !== DOM.timerText) return;
 
                 e.stopPropagation(); // Prevent window mousedown from resetting the timer instantly
                 clearTimeout(idleTimeout);
