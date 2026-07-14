@@ -1098,7 +1098,7 @@
             </div>
         </div>
 
-        <div class="footer-note">Codecrafted by <a href="https://stefanus.hosea.id">Stefanus Hosea</a> • v2026.07.09.002</div>
+        <div class="footer-note">Codecrafted by <a href="https://stefanus.hosea.id">Stefanus Hosea</a> • v2026.07.14.2300</div>
     </div>
 
     <!-- MODALS -->
@@ -1386,6 +1386,8 @@
 
         function renderTimeString(timeStr) {
             if (previousTimeStr === timeStr) return;
+            
+            document.title = timeStr + ""; // Update the document title
 
             // Rebuild the DOM spans entirely if the string length shifts 
             // (e.g. toggling milliseconds) or upon initial setup.
